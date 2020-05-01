@@ -9,6 +9,7 @@ import com.kalo.entity.databaseObject.Item;
 import com.kalo.entity.databaseObject.ItemStock;
 import com.kalo.entity.databaseObject.Promo;
 import com.kalo.entity.viewObject.ItemVO;
+import com.kalo.service.CacheService;
 import com.kalo.service.ItemService;
 import com.kalo.util.ItemUtil;
 import com.kalo.util.RedisUtil;
@@ -43,6 +44,9 @@ public class ItemServiceImpl implements ItemService {
     @Resource
     private RedisUtil redisUtil;
 
+    @Autowired
+    private CacheService cacheService;
+
     @Override
     public List<ItemVO> findAllItem() {
         List<ItemVO> list = new ArrayList<ItemVO>();
@@ -51,8 +55,18 @@ public class ItemServiceImpl implements ItemService {
 //            Collections.addAll(list,allItemVO.toArray(new ItemVO[allItemVO.size()]));
 //            return list;
 //        }
+
+        // 从本地缓存中取
+        String localCache = (String)cacheService.getCache("allItemVO");
+        if (!StringUtils.isEmpty(localCache)) {
+            list = JSON.parseArray(localCache, ItemVO.class);
+            return list;
+        }
+
+        // 从redis中取
         String allItemVO = (String)redisUtil.hget("item", "allItemVO");
         if (!StringUtils.isEmpty(allItemVO)) {
+            cacheService.setCache("allItemVO", allItemVO);
             list = JSON.parseArray(allItemVO, ItemVO.class);
             return list;
         }
@@ -77,6 +91,7 @@ public class ItemServiceImpl implements ItemService {
 
         //redisUtil.lSetAll("allItemVO", list);
         redisUtil.hset("item", "allItemVO",  JSON.toJSON(list).toString());
+        cacheService.setCache("allItemVO", JSON.toJSON(list).toString());
         return list;
     }
 

@@ -10,6 +10,14 @@ public interface CacheService {
      * 本地缓存存储
      * @param key
      * @param value
+     * @return
      */
-    void setCache(String key, Object value);
+    boolean setCache(String key, Object value);
+
+    /**
+     * 获取本地缓存
+     * @param key
+     * @return
+     */
+    Object getCache(String key);
 }
