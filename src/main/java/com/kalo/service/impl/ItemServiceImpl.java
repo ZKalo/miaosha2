@@ -1,5 +1,6 @@
 package com.kalo.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.kalo.dao.PromoRepository;
 import com.kalo.dao.item.ItemReposity;
 import com.kalo.dao.item.ItemStockRepostiy;
@@ -10,12 +11,16 @@ import com.kalo.entity.databaseObject.Promo;
 import com.kalo.entity.viewObject.ItemVO;
 import com.kalo.service.ItemService;
 import com.kalo.util.ItemUtil;
+import com.kalo.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -35,9 +40,23 @@ public class ItemServiceImpl implements ItemService {
     @Autowired
     private PromoRepository promoRepository;
 
+    @Resource
+    private RedisUtil redisUtil;
+
     @Override
     public List<ItemVO> findAllItem() {
-        List<ItemVO> list = new ArrayList<>();
+        List<ItemVO> list = new ArrayList<ItemVO>();
+//        List<Object> allItemVO = redisUtil.lGet("allItemVO", 0, -1);
+//        if (allItemVO.size() > 0)  {
+//            Collections.addAll(list,allItemVO.toArray(new ItemVO[allItemVO.size()]));
+//            return list;
+//        }
+        String allItemVO = (String)redisUtil.hget("item", "allItemVO");
+        if (!StringUtils.isEmpty(allItemVO)) {
+            list = JSON.parseArray(allItemVO, ItemVO.class);
+            return list;
+        }
+
         List<Item> all = itemReposity.findAll();
         for (Item e : all) {
             ItemStock stock = stockRepostiy.findByItemId(e.getId());
@@ -55,6 +74,9 @@ public class ItemServiceImpl implements ItemService {
             }
             list.add(ItemUtil.getItemVo(e, stock, promo));
         }
+
+        //redisUtil.lSetAll("allItemVO", list);
+        redisUtil.hset("item", "allItemVO",  JSON.toJSON(list).toString());
         return list;
     }
 

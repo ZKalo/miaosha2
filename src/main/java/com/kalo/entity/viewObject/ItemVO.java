@@ -2,6 +2,7 @@ package com.kalo.entity.viewObject;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
@@ -9,7 +10,7 @@ import java.math.BigDecimal;
  * @create 2020-04-21 16:47
  */
 @Data
-public class ItemVO {
+public class ItemVO implements Serializable {
     private Integer id;
     private String title;
     private BigDecimal price;

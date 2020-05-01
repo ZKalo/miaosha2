@@ -22,6 +22,6 @@ public interface ItemReposity extends JpaRepository<Item, Integer> {
      * @return
      */
     @Modifying
-    @Query(value = "UPDATE Item  set sales = sales + ?1 where id=?2",nativeQuery = true)
+    @Query(value = "UPDATE item  set sales = sales + ?1 where id=?2",nativeQuery = true)
     int updateSales(@Param("amount") Integer amount, @Param("itemId") Integer id);
 }
